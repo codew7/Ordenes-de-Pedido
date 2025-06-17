@@ -1,99 +1,141 @@
-diff --git a/index.html b/index.html
-index d3f5a12faa99758192ecc4ed3fc22c9249232e86..baaab72ade95f7a4ce8e23014645a97b72489024 100644
---- a/index.html
-+++ b/index.html
-@@ -1 +1,93 @@
--
-+<!DOCTYPE html>
-+<html lang="es">
-+<head>
-+    <meta charset="UTF-8">
-+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-+    <title>Ordenes de Pedido</title>
-+    <link rel="stylesheet" href="style.css">
-+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-+</head>
-+<body>
-+<header>
-+    <h1>Ordenes de Pedido</h1>
-+</header>
-+<div class="container">
-+    <form id="orderForm">
-+        <section>
-+            <h2>Cliente</h2>
-+            <label>Tipo Cliente
-+                <select id="tipoCliente" required>
-+                    <option value="Consumidor Final">Consumidor Final</option>
-+                    <option value="Mayorista">Mayorista</option>
-+                    <option value="Envios">Envios</option>
-+                </select>
-+            </label>
-+            <label>Nombre <input id="nombre" required></label>
-+            <label>Teléfono <input id="telefono" required></label>
-+            <label>Dirección <input id="direccion" required></label>
-+        </section>
-+        <section>
-+            <h2>Pedido</h2>
-+            <button type="button" id="addItem">Agregar Artículo</button>
-+            <datalist id="articleList"></datalist>
-+            <table>
-+                <thead>
-+                    <tr>
-+                        <th>Código</th>
-+                        <th>Artículo</th>
-+                        <th>Cant</th>
-+                        <th>Costo u.</th>
-+                        <th>Valor u.</th>
-+                        <th>Total</th>
-+                    </tr>
-+                </thead>
-+                <tbody id="items"></tbody>
-+            </table>
-+        </section>
-+        <section>
-+            <h2>Pagos</h2>
-+            <label>Subtotal <input id="subtotal" type="number" step="0.01" readonly></label>
-+            <label>Medio de pago
-+                <select id="medioPago" onchange="updateFinal()">
-+                    <option value="Efectivo">Efectivo</option>
-+                    <option value="MercadoPago">MercadoPago</option>
-+                    <option value="Transferencia">Transferencia</option>
-+                    <option value="ML">ML</option>
-+                </select>
-+            </label>
-+            <label>Costo Envío <input id="costoEnvio" type="number" step="0.01" value="0" oninput="updateFinal()"></label>
-+            <label>Total Costo <input id="totalCosto" type="number" step="0.01" readonly></label>
-+            <label>Total Ganancia <input id="totalGanancia" type="number" step="0.01" readonly></label>
-+            <label>Recargo <input id="recargo" type="number" step="0.01" readonly></label>
-+            <label>Descuento <input id="descuento" type="number" step="0.01" value="0" oninput="updateFinal()"></label>
-+            <label>Total Final <input id="totalFinal" type="number" step="0.01" readonly></label>
-+            <label>Vendedor
-+                <select id="vendedor">
-+                    <option value="Alejandro">Alejandro</option>
-+                    <option value="Javier">Javier</option>
-+                    <option value="Horacio">Horacio</option>
-+                    <option value="Hora">Hora</option>
-+                    <option value="Sabrina">Sabrina</option>
-+                </select>
-+            </label>
-+            <label>Nota <textarea id="nota"></textarea></label>
-+        </section>
-+        <button type="submit">Guardar Pedido</button>
-+    </form>
-+
-+    <h2>Pedidos Registrados</h2>
-+    <table>
-+        <thead>
-+            <tr>
-+                <th>Cliente</th>
-+                <th>Total Final</th>
-+                <th>Acciones</th>
-+            </tr>
-+        </thead>
-+        <tbody id="orders"></tbody>
-+    </table>
-+</div>
-+<script src="main.js"></script>
-+</body>
-+</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Órdenes de Pedido</title>
+  <!-- Google Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="container">
+    <h1>Sistema de Órdenes de Pedido</h1>
+
+    <!-- Sección Cliente -->
+    <section class="card" id="clienteSection">
+      <h2>Datos del Cliente</h2>
+      <div class="grid-2">
+        <label>Tipo Cliente
+          <select id="tipoCliente" required>
+            <option value="" disabled selected>Seleccionar...</option>
+            <option>Consumidor Final</option>
+            <option>Mayorista</option>
+            <option>Envíos</option>
+          </select>
+        </label>
+        <label>Nombre
+          <input id="nombreCliente" type="text" placeholder="Nombre completo" required>
+        </label>
+        <label>Teléfono
+          <input id="telefonoCliente" type="tel" placeholder="Ej: 11‑2345‑6789" pattern="[0-9\-\s]+" required>
+        </label>
+        <label>Dirección
+          <input id="direccionCliente" type="text" placeholder="Calle, número, ciudad" required>
+        </label>
+      </div>
+    </section>
+
+    <!-- Sección Pedido -->
+    <section class="card" id="pedidoSection">
+      <h2>Detalle del Pedido</h2>
+      <table id="tablaPedido">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Artículo</th>
+            <th>Cant</th>
+            <th>Costo u.</th>
+            <th>Valor u.</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <button id="btnAgregarItem" class="btn">+ Agregar Ítem</button>
+    </section>
+
+    <!-- Sección Pagos -->
+    <section class="card" id="pagosSection">
+      <h2>Pagos y Totales</h2>
+      <div class="grid-3">
+        <label>Subtotal
+          <input id="subtotal" type="number" step="0.01" readonly>
+        </label>
+        <label>Medio de Pago
+          <select id="medioPago" required>
+            <option value="" disabled selected>Seleccionar...</option>
+            <option>Efectivo</option>
+            <option>MercadoPago</option>
+            <option>Transferencia</option>
+            <option>ML</option>
+          </select>
+        </label>
+        <label>Costo Envío
+          <input id="costoEnvio" type="number" step="0.01" value="0">
+        </label>
+        <label>Total Costo
+          <input id="totalCosto" type="number" step="0.01" readonly>
+        </label>
+        <label>Total Ganancia
+          <input id="totalGanancia" type="number" step="0.01" readonly>
+        </label>
+        <label>Recargo (6 %)
+          <input id="recargo" type="number" step="0.01" readonly>
+        </label>
+        <label>Descuento
+          <input id="descuento" type="number" step="0.01" value="0">
+        </label>
+        <label>Total Final
+          <input id="totalFinal" type="number" step="0.01" readonly>
+        </label>
+        <label>Vendedor
+          <select id="vendedor" required>
+            <option value="" disabled selected>Seleccionar...</option>
+            <option>Alejandro</option>
+            <option>Javier</option>
+            <option>Horacio</option>
+            <option>Hora</option>
+            <option>Sabrina</option>
+          </select>
+        </label>
+      </div>
+      <label>Nota
+        <textarea id="nota" rows="2" placeholder="Observaciones…"></textarea>
+      </label>
+    </section>
+
+    <!-- Acciones -->
+    <section class="acciones">
+      <button id="btnGuardar" class="btn-primary">💾 Guardar Pedido</button>
+      <button id="btnLimpiar" class="btn-secondary">🧹 Limpiar Formulario</button>
+    </section>
+
+    <!-- Listado de Órdenes guardadas -->
+    <section class="card" id="historialSection">
+      <h2>Historial de Órdenes</h2>
+      <table id="tablaHistorial">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Fecha</th>
+            <th>Total</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Firebase -->
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.1/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/10.12.1/firebase-database.js"></script>
+  <!-- App Logic -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
