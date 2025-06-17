@@ -1,1 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ordenes de Pedido</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="container">
+  <h1>Ordenes de Pedido</h1>
+  <form id="orderForm">
+    <fieldset>
+      <legend>Cliente</legend>
+      <label>Tipo Cliente
+        <select id="tipoCliente" required>
+          <option value="">Seleccione</option>
+          <option value="Consumidor Final">Consumidor Final</option>
+          <option value="Mayorista">Mayorista</option>
+          <option value="Envios">Envios</option>
+        </select>
+      </label>
+      <label>Nombre <input type="text" id="nombre" required></label>
+      <label>Teléfono <input type="tel" id="telefono" required></label>
+      <label>Dirección <input type="text" id="direccion" required></label>
+    </fieldset>
+    <fieldset>
+      <legend>Pedido</legend>
+      <div>
+        <label>Artículo
+          <input list="articulosList" id="articuloInput">
+        </label>
+        <datalist id="articulosList"></datalist>
+        <label>Código <input type="text" id="codigoInput" readonly></label>
+        <label>Cant <input type="number" id="cantInput" min="1"></label>
+        <label>Costo u. <input type="number" id="costoInput" step="0.01"></label>
+        <label>Valor u. <input type="number" id="valorInput" step="0.01"></label>
+        <button type="button" id="addArticulo">Agregar Artículo</button>
+      </div>
+      <table id="articulosTable">
+        <thead>
+          <tr>
+            <th>Código</th><th>Articulo</th><th>Cant</th><th>Costo u.</th><th>Valor u.</th><th>Total</th><th>Acción</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </fieldset>
+    <fieldset>
+      <legend>Pagos</legend>
+      <label>Subtotal <input type="number" id="subtotal" readonly></label>
+      <label>Medio de pago
+        <select id="medioPago" required>
+          <option value="Efectivo">Efectivo</option>
+          <option value="MercadoPago">MercadoPago</option>
+          <option value="Transferencia">Transferencia</option>
+          <option value="ML">ML</option>
+        </select>
+      </label>
+      <label>Costo Envío <input type="number" id="costoEnvio" step="0.01" value="0"></label>
+      <label>Total Costo <input type="number" id="totalCosto" readonly></label>
+      <label>Total Ganancia <input type="number" id="totalGanancia" readonly></label>
+      <label>Recargo <input type="number" id="recargo" readonly></label>
+      <label>Descuento <input type="number" id="descuento" step="0.01" value="0"></label>
+      <label>Total Final <input type="number" id="totalFinal" readonly></label>
+      <label>Vendedor
+        <select id="vendedor" required>
+          <option value="Alejandro">Alejandro</option>
+          <option value="Javier">Javier</option>
+          <option value="Horacio">Horacio</option>
+          <option value="Hora">Hora</option>
+          <option value="Sabrina">Sabrina</option>
+        </select>
+      </label>
+      <label>Nota <textarea id="nota"></textarea></label>
+    </fieldset>
+    <button type="submit" id="guardarBtn">Guardar Pedido</button>
+  </form>
 
+  <div class="order-list" id="ordersContainer"></div>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
