@@ -1,1 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordenes de Pedido</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
+<body>
+<header>
+    <h1>Ordenes de Pedido</h1>
+</header>
+<div class="container">
+    <form id="orderForm">
+        <section>
+            <h2>Cliente</h2>
+            <label>Tipo Cliente
+                <select id="tipoCliente" required>
+                    <option value="Consumidor Final">Consumidor Final</option>
+                    <option value="Mayorista">Mayorista</option>
+                    <option value="Envios">Envios</option>
+                </select>
+            </label>
+            <label>Nombre <input id="nombre" required></label>
+            <label>Teléfono <input id="telefono" required></label>
+            <label>Dirección <input id="direccion" required></label>
+        </section>
+        <section>
+            <h2>Pedido</h2>
+            <button type="button" id="addItem">Agregar Artículo</button>
+            <datalist id="articleList"></datalist>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Artículo</th>
+                        <th>Cant</th>
+                        <th>Costo u.</th>
+                        <th>Valor u.</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="items"></tbody>
+            </table>
+        </section>
+        <section>
+            <h2>Pagos</h2>
+            <label>Subtotal <input id="subtotal" type="number" step="0.01" readonly></label>
+            <label>Medio de pago
+                <select id="medioPago" onchange="updateFinal()">
+                    <option value="Efectivo">Efectivo</option>
+                    <option value="MercadoPago">MercadoPago</option>
+                    <option value="Transferencia">Transferencia</option>
+                    <option value="ML">ML</option>
+                </select>
+            </label>
+            <label>Costo Envío <input id="costoEnvio" type="number" step="0.01" value="0" oninput="updateFinal()"></label>
+            <label>Total Costo <input id="totalCosto" type="number" step="0.01" readonly></label>
+            <label>Total Ganancia <input id="totalGanancia" type="number" step="0.01" readonly></label>
+            <label>Recargo <input id="recargo" type="number" step="0.01" readonly></label>
+            <label>Descuento <input id="descuento" type="number" step="0.01" value="0" oninput="updateFinal()"></label>
+            <label>Total Final <input id="totalFinal" type="number" step="0.01" readonly></label>
+            <label>Vendedor
+                <select id="vendedor">
+                    <option value="Alejandro">Alejandro</option>
+                    <option value="Javier">Javier</option>
+                    <option value="Horacio">Horacio</option>
+                    <option value="Hora">Hora</option>
+                    <option value="Sabrina">Sabrina</option>
+                </select>
+            </label>
+            <label>Nota <textarea id="nota"></textarea></label>
+        </section>
+        <button type="submit">Guardar Pedido</button>
+    </form>
 
+    <h2>Pedidos Registrados</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Total Final</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="orders"></tbody>
+    </table>
+</div>
+<script src="main.js"></script>
+</body>
+</html>
