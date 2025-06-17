@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Historial y Edición de Pedidos</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getDatabase, ref, get, update, remove } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD1mkIC2sQwvpMm-x-R_ReL-3mvOFNZAcA",
+      authDomain: "ordenes-de-pedido-e4248.firebaseapp.com",
+      databaseURL: "https://ordenes-de-pedido-e4248-default-rtdb.firebaseio.com",
+      projectId: "ordenes-de-pedido-e4248",
+      storageBucket: "ordenes-de-pedido-e4248.firebasestorage.app",
+      messagingSenderId: "244600094131",
+      appId: "1:244600094131:web:f44687583d9395f15c9fc6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase();
+
+    const tabla = document.getElementById('tabla');
+
+    window.onload = async () => {
+      const snapshot = await get(ref(db, 'Ordenes'));
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        Object.entries(data).forEach(([key, value]) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${value.orden_id}</td>
+            <td>${value.cliente.nombre}</td>
+            <td>${value.pedido.articulo}</td>
+            <td>${value.pedido.cantidad}</td>
+            <td>$${value.pagos.total_final.toFixed(2)}</td>
+            <td><button onclick="editarPedido('${key}')">Editar</button></td>
+            <td><button onclick="eliminarPedido('${key}')">Eliminar</button></td>
+          `;
+          tabla.appendChild(tr);
+        });
+      }
+    };
+
+    window.editarPedido = async (key) => {
+      const nuevoNombre = prompt("Nuevo nombre del cliente:");
+      if (nuevoNombre) {
+        await update(ref(db, 'Ordenes/' + key + '/cliente'), { nombre: nuevoNombre });
+        alert("Pedido actualizado");
+        location.reload();
+      }
+    };
+
+    window.eliminarPedido = async (key) => {
+      if (confirm("¿Seguro que querés eliminar este pedido?")) {
+        await remove(ref(db, 'Ordenes/' + key));
+        alert("Pedido eliminado");
+        location.reload();
+      }
+    };
+  </script>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { padding: 12px; border: 1px solid #ddd; text-align: center; }
+    th { background: #007acc; color: white; }
+    button { padding: 6px 12px; margin: 0 5px; cursor: pointer; border: none; background: #28a745; color: white; border-radius: 4px; }
+    button:hover { background: #218838; }
+    button:last-child { background: #dc3545; }
+    button:last-child:hover { background: #c82333; }
+  </style>
+</head>
+<body>
+  <h2>Historial de Pedidos</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Cliente</th>
+        <th>Artículo</th>
+        <th>Cantidad</th>
+        <th>Total Final</th>
+        <th colspan="2">Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tabla"></tbody>
+  </table>
+</body>
+</html>
