@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('addItem').addEventListener('click', addItem);
     document.getElementById('orderForm').addEventListener('submit', saveOrder);
     loadOrders();
+    loadHistory();
 });
 
 function findArticleByName(name) {
@@ -156,10 +157,12 @@ function saveOrder(e) {
 
     const newRef = db.ref('ordenes').push();
     newRef.set(order).then(() => {
+        logHistory('crear', order, newRef.key);
         alert('Pedido guardado');
         document.getElementById('orderForm').reset();
         document.getElementById('items').innerHTML = '';
         loadOrders();
+        loadHistory();
     });
 }
 
@@ -217,11 +220,13 @@ function editOrder(key, order) {
         ev.preventDefault();
         const updated = gatherFormData();
         db.ref('ordenes/' + key).set(updated).then(() => {
+            logHistory('actualizar', updated, key);
             alert('Pedido actualizado');
             document.getElementById('orderForm').reset();
             document.getElementById('items').innerHTML = '';
             document.getElementById('orderForm').onsubmit = saveOrder;
             loadOrders();
+            loadHistory();
         });
     };
 }
@@ -253,6 +258,37 @@ function gatherFormData() {
 
 function deleteOrder(key) {
     if (confirm('¿Eliminar pedido?')) {
-        db.ref('ordenes/' + key).remove().then(loadOrders);
+        db.ref('ordenes/' + key).once('value').then(snap => {
+            const order = snap.val();
+            logHistory('eliminar', order, key);
+            db.ref('ordenes/' + key).remove().then(() => {
+                loadOrders();
+                loadHistory();
+            });
+        });
     }
+}
+
+function logHistory(action, order, key) {
+    db.ref('historial').push({
+        action,
+        key,
+        order,
+        timestamp: Date.now()
+    });
+}
+
+function loadHistory() {
+    db.ref('historial').once('value').then(snap => {
+        const tbody = document.getElementById('history');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        snap.forEach(child => {
+            const h = child.val();
+            const tr = document.createElement('tr');
+            const nombre = h.order && h.order.cliente ? h.order.cliente.nombre : '';
+            tr.innerHTML = `<td>${h.action}</td><td>${nombre}</td><td>${new Date(h.timestamp).toLocaleString()}</td>`;
+            tbody.appendChild(tr);
+        });
+    });
 }
