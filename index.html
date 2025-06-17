@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Órdenes de Pedido</title>
+  <!-- Tailwind CSS CDN para estilos rápidos y modernos -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- jQuery (sólo si más adelante quisieras sumar select2 u otros plugins) -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- Estilos básicos (sin degradados) -->
+  <style>
+    .input{width:100%;padding:0.5rem 0.75rem;border:1px solid #d1d5db;border-radius:0.5rem;}
+    .btn-primary{background:#2563eb;color:#ffffff;padding:0.5rem 1rem;border-radius:0.5rem;transition:background .2s;}
+    .btn-primary:hover{background:#1d4ed8;}
+    .btn-secondary{background:#e5e7eb;color:#374151;padding:0.5rem 1rem;border-radius:0.5rem;transition:background .2s;}
+    .btn-secondary:hover{background:#d1d5db;}
+  </style>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-6xl mx-auto bg-white rounded-2xl shadow p-8">
+    <h1 class="text-3xl font-bold mb-6 text-center">Órdenes de Pedido</h1>
+
+    <form id="orderForm" class="space-y-8">
+      <!-- Sección Cliente -->
+      <section class="space-y-4">
+        <h2 class="text-xl font-semibold border-b pb-2">Cliente</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block mb-1">ID Orden</label>
+            <input type="text" id="orderId" class="input" placeholder="Ej. OP0001" required>
+          </div>
+          <div>
+            <label class="block mb-1">Fecha</label>
+            <input type="date" id="fecha" class="input" required>
+          </div>
+          <div>
+            <label class="block mb-1">Tipo Cliente</label>
+            <select id="tipoCliente" class="input" required>
+              <option value="Consumidor Final">Consumidor Final</option>
+              <option value="Mayorista">Mayorista</option>
+              <option value="Envios">Envios</option>
+            </select>
+          </div>
+          <div>
+            <label class="block mb-1">Nombre</label>
+            <input type="text" id="nombre" class="input" required>
+          </div>
+          <div>
+            <label class="block mb-1">Teléfono</label>
+            <input type="tel" id="telefono" class="input" required>
+          </div>
+          <div>
+            <label class="block mb-1">Dirección</label>
+            <input type="text" id="direccion" class="input">
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección Pedido -->
+      <section class="space-y-4">
+        <h2 class="text-xl font-semibold border-b pb-2">Pedido</h2>
+        <div id="itemsContainer" class="space-y-4"></div>
+        <button type="button" id="addItem" class="btn-secondary">Agregar Ítem</button>
+      </section>
+
+      <!-- Sección Pagos -->
+      <section class="space-y-4">
+        <h2 class="text-xl font-semibold border-b pb-2">Pagos</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block mb-1">Subtotal</label>
+            <input type="number" id="subtotal" class="input" readonly>
+          </div>
+          <div>
+            <label class="block mb-1">Medio de Pago</label>
+            <select id="medioPago" class="input">
+              <option value="Efectivo">Efectivo</option>
+              <option value="MercadoPago">MercadoPago</option>
+              <option value="Transferencia">Transferencia</option>
+              <option value="ML">ML</option>
+            </select>
+          </div>
+          <div>
+            <label class="block mb-1">Costo Envío</label>
+            <input type="number" id="costoEnvio" class="input" value="0">
+          </div>
+          <div>
+            <label class="block mb-1">Total Costo</label>
+            <input type="number" id="totalCosto" class="input" readonly>
+          </div>
+          <div>
+            <label class="block mb-1">Total Ganancia</label>
+            <input type="number" id="ganancia" class="input" readonly>
+          </div>
+          <div>
+            <label class="block mb-1">Recargo MP (6%)</label>
+            <input type="number" id="recargo" class="input" readonly>
+          </div>
+          <div>
+            <label class="block mb-1">Total Final</label>
+            <input type="number" id="totalFinal" class="input" readonly>
+          </div>
+          <div>
+            <label class="block mb-1">Descuento</label>
+            <input type="number" id="descuento" class="input" value="0">
+          </div>
+          <div>
+            <label class="block mb-1">Vendedor</label>
+            <input type="text" id="vendedor" class="input">
+          </div>
+          <div class="md:col-span-3">
+            <label class="block mb-1">Nota</label>
+            <textarea id="nota" class="input" rows="3"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <button type="submit" class="btn-primary w-full">Guardar Orden</button>
+    </form>
+  </div>
+
+  <!-- Firebase + lógica de la app -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+    import { getDatabase, ref, push } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+
+    /* Configuración Firebase proporcionada */
+    const firebaseConfig = {
+      apiKey: "AIzaSyD1mkIC2sQwvpMm-x-R_ReL-3mvOFNZAcA",
+      authDomain: "ordenes-de-pedido-e4248.firebaseapp.com",
+      databaseURL: "https://ordenes-de-pedido-e4248-default-rtdb.firebaseio.com",
+      projectId: "ordenes-de-pedido-e4248",
+      storageBucket: "ordenes-de-pedido-e4248.firebasestorage.app",
+      messagingSenderId: "244600094131",
+      appId: "1:244600094131:web:f44687583d9395f15c9fc6"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    /* Configuración Google Sheets */
+    const SHEETS = {
+      API_KEY: 'AIzaSyDwiZWDc66tv4usDIA-IreiJMLFuk0236Q',
+      ID: '1cD50d0-oSTogEe9tYo9ABUSP1ONCy3SAV92zsYYIG84',
+      RANGE: 'Lista!A2:G'
+    };
+
+    let articulos = [];
+
+    /* Cargar datos de Google Sheets */
+    async function cargarArticulos(){
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS.ID}/values/${SHEETS.RANGE}?key=${SHEETS.API_KEY}`;
+      const res = await fetch(url);
+      const json = await res.json();
+      if(!json.values) return;
+      articulos = json.values.map(r => ({
+        codigo: r[2],             // Columna C
+        articulo: r[3],           // Columna D
+        valorU: parseFloat(r[4]||0), // Columna E
+        costoU: parseFloat(r[6]||0)  // Columna G
+      }));
+      construirDatalist();
+    }
+
+    /* Construir datalist para autocompletado */
+    function construirDatalist(){
+      const dl = document.createElement('datalist');
+      dl.id = 'listaArticulos';
+      articulos.forEach(a=>{
+        const opt = document.createElement('option');
+        opt.value = a.articulo;
+        dl.appendChild(opt);
+      });
+      document.body.appendChild(dl);
+    }
+
+    /* Gestión de filas de ítems */
+    const contenedorItems = document.getElementById('itemsContainer');
+    document.getElementById('addItem').addEventListener('click', agregarFilaItem);
+
+    function agregarFilaItem(){
+      const fila = document.createElement('div');
+      fila.className='grid grid-cols-6 gap-2';
+      fila.innerHTML = `
+        <input list="listaArticulos" placeholder="Artículo" class="input articulo" required>
+        <input type="text" class="input codigo" placeholder="Código" readonly>
+        <input type="number" class="input cantidad" min="1" value="1">
+        <input type="number" class="input costo" placeholder="Costo u." readonly>
+        <input type="number" class="input valor" placeholder="Valor u." readonly>
+        <input type="number" class="input total" placeholder="Total" readonly>
+      `;
+      contenedorItems.appendChild(fila);
+
+      /* Eventos */
+      fila.querySelector('.articulo').addEventListener('change', ()=>completarDatosItem(fila));
+      fila.querySelector('.cantidad').addEventListener('input', ()=>actualizarTotalItem(fila));
+    }
+
+    function completarDatosItem(fila){
+      const nombre = fila.querySelector('.articulo').value;
+      const art = articulos.find(a=>a.articulo===nombre);
+      if(!art) return;
+      fila.querySelector('.codigo').value = art.codigo;
+      fila.querySelector('.costo').value = art.costoU;
+      fila.querySelector('.valor').value = art.valorU;
+      actualizarTotalItem(fila);
+    }
+
+    function actualizarTotalItem(fila){
+      const qty = parseFloat(fila.querySelector('.cantidad').value)||0;
+      const val = parseFloat(fila.querySelector('.valor').value)||0;
+      fila.querySelector('.total').value = (qty*val).toFixed(2);
+      recalcularTotales();
+    }
+
+    /* Recalcular totales de pago */
+    function recalcularTotales(){
+      const filas = Array.from(contenedorItems.children);
+      let subtotal=0, totalCosto=0;
+      filas.forEach(f=>{
+        const qty=parseFloat(f.querySelector('.cantidad').value)||0;
+        const val=parseFloat(f.querySelector('.valor').value)||0;
+        const cost=parseFloat(f.querySelector('.costo').value)||0;
+        subtotal+=qty*val;
+        totalCosto+=qty*cost;
+      });
+      document.getElementById('subtotal').value=subtotal.toFixed(2);
+      const medio=document.getElementById('medioPago').value;
+      const recargo = medio==='MercadoPago'? subtotal*0.06:0;
+      document.getElementById('recargo').value=recargo.toFixed(2);
+      const costoEnvio=parseFloat(document.getElementById('costoEnvio').value)||0;
+      const descuento=parseFloat(document.getElementById('descuento').value)||0;
+      const totalFinal=subtotal+recargo+costoEnvio-descuento;
+      document.getElementById('totalFinal').value=totalFinal.toFixed(2);
+      document.getElementById('totalCosto').value=totalCosto.toFixed(2);
+      document.getElementById('ganancia').value=(totalFinal-totalCosto).toFixed(2);
+    }
+
+    /* Reactivar totales ante cambios */
+    ['medioPago','costoEnvio','descuento'].forEach(id=>{
+      document.getElementById(id).addEventListener('input', recalcularTotales);
+    });
+
+    /* Fila inicial y datos */
+    agregarFilaItem();
+    cargarArticulos();
+
+    /* Envío del formulario */
+    document.getElementById('orderForm').addEventListener('submit', async e=>{
+      e.preventDefault();
+      const datos = recogerDatos();
+      await push(ref(db,'Ordenes de Pedido'), datos);
+      alert('Orden guardada con éxito');
+      e.target.reset();
+      contenedorItems.innerHTML='';
+      agregarFilaItem();
+      recalcularTotales();
+    });
+
+    function recogerDatos(){
+      const items = Array.from(contenedorItems.children).map(f=>({
+        codigo: f.querySelector('.codigo').value,
+        articulo: f.querySelector('.articulo').value,
+        cantidad: parseFloat(f.querySelector('.cantidad').value),
+        costoU: parseFloat(f.querySelector('.costo').value),
+        valorU: parseFloat(f.querySelector('.valor').value),
+        total: parseFloat(f.querySelector('.total').value)
+      }));
+      return {
+        cliente:{
+          idOrden: document.getElementById('orderId').value,
+          fecha: document.getElementById('fecha').value,
+          tipoCliente: document.getElementById('tipoCliente').value,
+          nombre: document.getElementById('nombre').value,
+          telefono: document.getElementById('telefono').value,
+          direccion: document.getElementById('direccion').value
+        },
+        items,
+        pagos:{
+          subtotal: parseFloat(document.getElementById('subtotal').value)||0,
+          medioPago: document.getElementById('medioPago').value,
+          costoEnvio: parseFloat(document.getElementById('costoEnvio').value)||0,
+          totalCosto: parseFloat(document.getElementById('totalCosto').value)||0,
+          ganancia: parseFloat(document.getElementById('ganancia').value)||0,
+          recargo: parseFloat(document.getElementById('recargo').value)||0,
+          totalFinal: parseFloat(document.getElementById('totalFinal').value)||0,
+          descuento: parseFloat(document.getElementById('descuento').value)||0,
+          vendedor: document.getElementById('vendedor').value,
+          nota: document.getElementById('nota').value
+        }
+      };
+    }
+  </script>
+</body>
+</html>
